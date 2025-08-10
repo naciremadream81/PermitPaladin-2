@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "./ObjectUploader";
+import DocumentPreview from "./DocumentPreview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +16,8 @@ import {
   Plus, 
   Calendar,
   User,
-  FolderOpen
+  FolderOpen,
+  Eye
 } from "lucide-react";
 
 interface DocumentListProps {
@@ -221,6 +223,15 @@ export default function DocumentList({ packageId }: DocumentListProps) {
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <DocumentPreview document={document}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:text-blue-700"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </DocumentPreview>
                   <Button
                     variant="ghost"
                     size="sm"
