@@ -75,8 +75,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { county, status, search } = req.query;
       
       const packages = await storage.getPermitPackagesByOwner(userId, {
-        countyId: county,
-        status: status,
+        countyId: county === "all" ? undefined : county,
+        status: status === "all" ? undefined : status,
         search: search,
       });
       

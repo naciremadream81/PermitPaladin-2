@@ -20,8 +20,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [filters, setFilters] = useState({
     search: "",
-    county: "",
-    status: "",
+    county: "all",
+    status: "all",
   });
 
   // Redirect to home if not authenticated
@@ -174,8 +174,8 @@ export default function Dashboard() {
                     <SelectValue placeholder="All Counties" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Counties</SelectItem>
-                    {counties?.map((county: any) => (
+                    <SelectItem value="all">All Counties</SelectItem>
+                    {counties.map((county: any) => (
                       <SelectItem key={county.id} value={county.id}>
                         {county.name}
                       </SelectItem>
@@ -193,7 +193,7 @@ export default function Dashboard() {
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="under_review">Under Review</SelectItem>
                     <SelectItem value="approved">Approved</SelectItem>

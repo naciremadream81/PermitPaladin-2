@@ -25,7 +25,7 @@ interface DocumentListProps {
 export default function DocumentList({ packageId }: DocumentListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>();
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["/api/packages", packageId, "documents"],
@@ -51,7 +51,7 @@ export default function DocumentList({ packageId }: DocumentListProps) {
         title: "Success",
         description: "Document uploaded successfully.",
       });
-      setSelectedDocumentType("");
+      setSelectedDocumentType(undefined);
     },
     onError: (error) => {
       toast({
