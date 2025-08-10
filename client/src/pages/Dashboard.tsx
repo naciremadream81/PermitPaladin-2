@@ -175,7 +175,7 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Counties</SelectItem>
-                    {counties.map((county: any) => (
+                    {Array.isArray(counties) && counties.map((county: any) => (
                       <SelectItem key={county.id} value={county.id}>
                         {county.name}
                       </SelectItem>
@@ -207,7 +207,7 @@ export default function Dashboard() {
                 <Button 
                   className="w-full"
                   variant="outline"
-                  onClick={() => setFilters({ search: "", county: "", status: "" })}
+                  onClick={() => setFilters({ search: "", county: "all", status: "all" })}
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Clear Filters

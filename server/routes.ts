@@ -68,6 +68,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Checklist items
+  app.get("/api/checklist/:countyId/:projectType", async (req, res) => {
+    try {
+      const { countyId, projectType } = req.params;
+      const checklistItems = await storage.getChecklistItems(countyId, projectType);
+      res.json(checklistItems);
+    } catch (error) {
+      console.error("Error fetching checklist items:", error);
+      res.status(500).json({ message: "Failed to fetch checklist items" });
+    }
+  });
+
   // Permit packages
   app.get("/api/packages", isAuthenticated, async (req: any, res) => {
     try {

@@ -183,7 +183,7 @@ export default function CreatePackage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {(counties as any[])?.map((county: any) => (
+                            {Array.isArray(counties) && counties.map((county: any) => (
                               <SelectItem key={county.id} value={county.id}>
                                 {county.name}
                               </SelectItem>
