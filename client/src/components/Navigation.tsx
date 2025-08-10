@@ -11,6 +11,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLocation } from "wouter";
 import { Menu, Bell, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import type { User as UserType } from "@shared/schema";
 
 export default function Navigation() {
   const { user } = useAuth();
@@ -24,13 +25,15 @@ export default function Navigation() {
     { name: "Reports", href: "/reports", current: location.startsWith("/reports") },
   ];
 
-  const userInitials = user?.firstName && user?.lastName 
-    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
-    : user?.email?.charAt(0).toUpperCase() || "U";
+  const typedUser = user as UserType | undefined;
+  
+  const userInitials = typedUser?.firstName && typedUser?.lastName 
+    ? `${typedUser.firstName.charAt(0)}${typedUser.lastName.charAt(0)}`
+    : typedUser?.email?.charAt(0).toUpperCase() || "U";
 
-  const userName = user?.firstName && user?.lastName 
-    ? `${user.firstName} ${user.lastName}`
-    : user?.email || "User";
+  const userName = typedUser?.firstName && typedUser?.lastName 
+    ? `${typedUser.firstName} ${typedUser.lastName}`
+    : typedUser?.email || "User";
 
   return (
     <nav className="bg-primary text-white shadow-lg">
@@ -108,7 +111,7 @@ export default function Navigation() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center text-white hover:bg-blue-700 p-2">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={user?.profileImageUrl} alt={userName} />
+                    <AvatarImage src={typedUser?.profileImageUrl || undefined} alt={userName} />
                     <AvatarFallback className="bg-blue-600 text-white">
                       {userInitials}
                     </AvatarFallback>

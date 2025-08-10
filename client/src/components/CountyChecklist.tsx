@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { CheckCircle, Circle, AlertCircle } from "lucide-react";
+import type { ChecklistItem, PackageChecklistProgress } from "@shared/schema";
 
 interface CountyChecklistProps {
   packageId: string;
@@ -20,12 +21,12 @@ export default function CountyChecklist({ packageId, countyId, projectType }: Co
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState<{ [itemId: string]: string }>({});
 
-  const { data: checklistItems, isLoading: itemsLoading } = useQuery({
+  const { data: checklistItems = [], isLoading: itemsLoading } = useQuery<ChecklistItem[]>({
     queryKey: ["/api/counties", countyId, "checklist", projectType],
     retry: false,
   });
 
-  const { data: progress } = useQuery({
+  const { data: progress = [] } = useQuery<PackageChecklistProgress[]>({
     queryKey: ["/api/packages", packageId, "checklist"],
     retry: false,
   });
@@ -72,7 +73,7 @@ export default function CountyChecklist({ packageId, countyId, projectType }: Co
   };
 
   const handleSaveNotes = (itemId: string) => {
-    const item = progress?.find((p: any) => p.checklistItemId === itemId);
+    const item = progress.find((p) => p.checklistItemId === itemId);
     updateProgressMutation.mutate({
       itemId,
       isCompleted: item?.isCompleted || false,
@@ -81,11 +82,11 @@ export default function CountyChecklist({ packageId, countyId, projectType }: Co
   };
 
   const getProgressForItem = (itemId: string) => {
-    return progress?.find((p: any) => p.checklistItemId === itemId);
+    return progress.find((p) => p.checklistItemId === itemId);
   };
 
-  const completedCount = progress?.filter((p: any) => p.isCompleted).length || 0;
-  const totalCount = checklistItems?.length || 0;
+  const completedCount = progress.filter((p) => p.isCompleted).length;
+  const totalCount = checklistItems.length;
   const completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   if (itemsLoading) {

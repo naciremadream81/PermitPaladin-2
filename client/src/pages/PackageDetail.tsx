@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit, FileText, CheckSquare } from "lucide-react";
 import { useLocation } from "wouter";
+import type { PermitPackage, County } from "@shared/schema";
 
 export default function PackageDetail() {
   const params = useParams();
@@ -36,13 +37,13 @@ export default function PackageDetail() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: package_, isLoading: packageLoading, error: packageError } = useQuery({
+  const { data: package_, isLoading: packageLoading, error: packageError } = useQuery<PermitPackage>({
     queryKey: ["/api/packages", packageId],
     retry: false,
     enabled: !!packageId,
   });
 
-  const { data: county } = useQuery({
+  const { data: county } = useQuery<County>({
     queryKey: ["/api/counties", package_?.countyId],
     retry: false,
     enabled: !!package_?.countyId,

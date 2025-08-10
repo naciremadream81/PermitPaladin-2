@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Plus, Filter, Search } from "lucide-react";
+import type { PermitPackage, County } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -38,17 +39,22 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<{
+    activePackages: number;
+    approvedPackages: number;
+    underReviewPackages: number;
+    issuePackages: number;
+  }>({
     queryKey: ["/api/stats"],
     retry: false,
   });
 
-  const { data: counties } = useQuery({
+  const { data: counties = [] } = useQuery<County[]>({
     queryKey: ["/api/counties"],
     retry: false,
   });
 
-  const { data: packages, isLoading: packagesLoading, error: packagesError } = useQuery({
+  const { data: packages = [], isLoading: packagesLoading, error: packagesError } = useQuery<PermitPackage[]>({
     queryKey: ["/api/packages", filters.county, filters.status, filters.search],
     retry: false,
   });

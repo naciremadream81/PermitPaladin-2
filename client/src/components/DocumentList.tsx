@@ -72,7 +72,7 @@ export default function DocumentList({ packageId }: DocumentListProps) {
   };
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0 && selectedDocumentType) {
+    if (result.successful && result.successful.length > 0 && selectedDocumentType) {
       const uploadedFile = result.successful[0];
       const file = uploadedFile.data as any;
       
@@ -194,7 +194,7 @@ export default function DocumentList({ packageId }: DocumentListProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {documents.map((document: any) => (
+            {(documents as any[]).map((document: any) => (
               <div key={document.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">

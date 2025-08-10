@@ -183,7 +183,7 @@ export default function CreatePackage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {counties?.map((county: any) => (
+                            {(counties as any[])?.map((county: any) => (
                               <SelectItem key={county.id} value={county.id}>
                                 {county.name}
                               </SelectItem>
@@ -269,7 +269,8 @@ export default function CreatePackage() {
                         <Textarea 
                           placeholder="Describe the project scope and details..."
                           rows={4}
-                          {...field} 
+                          {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
