@@ -134,6 +134,7 @@ export const checklistItems = pgTable("checklist_items", {
   description: text("description"),
   isRequired: boolean("is_required").notNull().default(true),
   documentType: documentTypeEnum("document_type"),
+  category: varchar("category").notNull().default("General"),
   order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
