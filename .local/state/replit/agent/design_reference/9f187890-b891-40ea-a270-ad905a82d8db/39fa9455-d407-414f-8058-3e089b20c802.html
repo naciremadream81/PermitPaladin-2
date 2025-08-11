@@ -1,0 +1,675 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permit Package Manager - Florida Construction Permits</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    'roboto': ['Roboto', 'sans-serif'],
+                },
+                colors: {
+                    primary: '#1976D2',
+                    secondary: '#388E3C',
+                    accent: '#F57C00',
+                    error: '#D32F2F',
+                    surface: '#FFFFFF',
+                    background: '#FAFAFA',
+                }
+            }
+        }
+    };
+    </script>
+</head>
+<body class="font-roboto bg-background min-h-screen">
+    <!-- @COMPONENT: Navigation [Mobile drawer + desktop header] -->
+    <nav class="bg-primary text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <button class="md:hidden text-white hover:bg-blue-700 p-2 rounded" data-event="click:toggleMobileMenu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="flex-shrink-0 ml-2 md:ml-0">
+                        <h1 class="text-xl font-medium">Permit Package Manager</h1>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#" class="bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="#" class="text-blue-100 hover:bg-blue-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Packages</a>
+                        <a href="#" class="text-blue-100 hover:bg-blue-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Counties</a>
+                        <a href="#" class="text-blue-100 hover:bg-blue-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Reports</a>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="text-white hover:bg-blue-700 p-2 rounded" data-event="click:showNotifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute -mt-1 -mr-1 px-2 py-1 text-xs bg-accent rounded-full">3</span>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center text-white hover:bg-blue-700 p-2 rounded" data-event="click:toggleUserMenu">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="User avatar" class="w-8 h-8 rounded-full mr-2 object-cover" />
+                            <span data-bind="user.name" class="hidden sm:block">John Smith</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation -->
+
+    <!-- Mobile menu overlay -->
+    <div class="md:hidden fixed inset-0 z-50 hidden" id="mobile-menu-overlay">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-xl">
+            <div class="p-4 border-b">
+                <button class="float-right text-gray-500 hover:text-gray-700" data-event="click:toggleMobileMenu">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2 class="text-lg font-medium text-gray-900">Menu</h2>
+            </div>
+            <nav class="p-4 space-y-2">
+                <a href="#" class="block bg-blue-50 text-primary px-3 py-2 rounded-md font-medium">Dashboard</a>
+                <a href="#" class="block text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-md">Packages</a>
+                <a href="#" class="block text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-md">Counties</a>
+                <a href="#" class="block text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-md">Reports</a>
+                <a href="#" class="block text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-md">Settings</a>
+                <a href="#" class="block text-error hover:bg-red-50 px-3 py-2 rounded-md">Sign Out</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- @COMPONENT: Dashboard Header [Stats and actions] -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-2xl font-medium text-gray-900">Dashboard</h2>
+                    <p class="mt-1 text-sm text-gray-600">Manage your Florida building permit packages</p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <button class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors" data-event="click:createPackage">
+                        <i class="fas fa-plus mr-2"></i>
+                        New Permit Package
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Dashboard Header -->
+
+        <!-- @COMPONENT: Statistics Cards [Overview metrics] -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-surface rounded-lg shadow-sm p-6 border">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-folder-open text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Active Packages</p>
+                        <p class="text-2xl font-semibold text-gray-900" data-bind="stats.activePackages">24</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-lg shadow-sm p-6 border">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-secondary bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-secondary"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Approved</p>
+                        <p class="text-2xl font-semibold text-gray-900" data-bind="stats.approvedPackages">18</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-lg shadow-sm p-6 border">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-accent bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-accent"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Under Review</p>
+                        <p class="text-2xl font-semibold text-gray-900" data-bind="stats.underReviewPackages">12</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-lg shadow-sm p-6 border">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-error bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-error"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Issues</p>
+                        <p class="text-2xl font-semibold text-gray-900" data-bind="stats.issuePackages">3</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Statistics Cards -->
+
+        <!-- @COMPONENT: Filters and Search [County selection and search] -->
+        <div class="bg-surface rounded-lg shadow-sm border mb-6 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Packages</label>
+                    <div class="relative">
+                        <input type="text" id="search" placeholder="Search by project name, address..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="filters.search" />
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="county" class="block text-sm font-medium text-gray-700 mb-2">Florida County</label>
+                    <select id="county" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="filters.county">
+                        <option value="">All Counties</option>
+                        <option value="alachua">Alachua County</option>
+                        <option value="baker">Baker County</option>
+                        <option value="bay">Bay County</option>
+                        <option value="bradford">Bradford County</option>
+                        <option value="brevard">Brevard County</option>
+                        <option value="broward">Broward County</option>
+                        <option value="calhoun">Calhoun County</option>
+                        <option value="charlotte">Charlotte County</option>
+                        <option value="citrus">Citrus County</option>
+                        <option value="clay">Clay County</option>
+                        <option value="collier">Collier County</option>
+                        <option value="columbia">Columbia County</option>
+                        <option value="desoto">DeSoto County</option>
+                        <option value="dixie">Dixie County</option>
+                        <option value="duval">Duval County</option>
+                        <option value="escambia">Escambia County</option>
+                        <option value="flagler">Flagler County</option>
+                        <option value="franklin">Franklin County</option>
+                        <option value="gadsden">Gadsden County</option>
+                        <option value="gilchrist">Gilchrist County</option>
+                        <option value="glades">Glades County</option>
+                        <option value="gulf">Gulf County</option>
+                        <option value="hamilton">Hamilton County</option>
+                        <option value="hardee">Hardee County</option>
+                        <option value="hendry">Hendry County</option>
+                        <option value="hernando">Hernando County</option>
+                        <option value="highlands">Highlands County</option>
+                        <option value="hillsborough">Hillsborough County</option>
+                        <option value="holmes">Holmes County</option>
+                        <option value="indian-river">Indian River County</option>
+                        <option value="jackson">Jackson County</option>
+                        <option value="jefferson">Jefferson County</option>
+                        <option value="lafayette">Lafayette County</option>
+                        <option value="lake">Lake County</option>
+                        <option value="lee">Lee County</option>
+                        <option value="leon">Leon County</option>
+                        <option value="levy">Levy County</option>
+                        <option value="liberty">Liberty County</option>
+                        <option value="madison">Madison County</option>
+                        <option value="manatee">Manatee County</option>
+                        <option value="marion">Marion County</option>
+                        <option value="martin">Martin County</option>
+                        <option value="miami-dade">Miami-Dade County</option>
+                        <option value="monroe">Monroe County</option>
+                        <option value="nassau">Nassau County</option>
+                        <option value="okaloosa">Okaloosa County</option>
+                        <option value="okeechobee">Okeechobee County</option>
+                        <option value="orange">Orange County</option>
+                        <option value="osceola">Osceola County</option>
+                        <option value="palm-beach">Palm Beach County</option>
+                        <option value="pasco">Pasco County</option>
+                        <option value="pinellas">Pinellas County</option>
+                        <option value="polk">Polk County</option>
+                        <option value="putnam">Putnam County</option>
+                        <option value="santa-rosa">Santa Rosa County</option>
+                        <option value="sarasota">Sarasota County</option>
+                        <option value="seminole">Seminole County</option>
+                        <option value="st-johns">St. Johns County</option>
+                        <option value="st-lucie">St. Lucie County</option>
+                        <option value="sumter">Sumter County</option>
+                        <option value="suwannee">Suwannee County</option>
+                        <option value="taylor">Taylor County</option>
+                        <option value="union">Union County</option>
+                        <option value="volusia">Volusia County</option>
+                        <option value="wakulla">Wakulla County</option>
+                        <option value="walton">Walton County</option>
+                        <option value="washington">Washington County</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="filters.status">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="under-review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="issued">Issued</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button class="w-full bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors" data-event="click:applyFilters">
+                        <i class="fas fa-filter mr-2"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Filters and Search -->
+
+        <!-- @COMPONENT: Permit Packages List [Main content area] -->
+        <div class="bg-surface rounded-lg shadow-sm border">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Permit Packages</h3>
+                <p class="mt-1 text-sm text-gray-600">Track and manage your building permit applications</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">County</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documents</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- @MAP: packages.map(package => ( -->
+                        <tr class="hover:bg-gray-50" data-mock="true">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-home text-primary"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900" data-bind="package.name">Sunset Residential Complex</div>
+                                        <div class="text-sm text-gray-500" data-bind="package.address">1425 Ocean Drive, Miami Beach</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900" data-bind="package.county">Miami-Dade</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-secondary bg-opacity-10 text-secondary" data-bind="package.status">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Approved
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-file-alt mr-1"></i>
+                                    <span data-bind="package.documentCount">12</span> files
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="package.lastUpdated">
+                                2 hours ago
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-blue-700 mr-3" data-event="click:viewPackage">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-gray-600" data-event="click:editPackage">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50" data-mock="true">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-accent bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-building text-accent"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900" data-bind="package.name">Downtown Office Tower</div>
+                                        <div class="text-sm text-gray-500" data-bind="package.address">789 Business Blvd, Orlando</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900" data-bind="package.county">Orange</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-accent bg-opacity-10 text-accent" data-bind="package.status">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Under Review
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-file-alt mr-1"></i>
+                                    <span data-bind="package.documentCount">18</span> files
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="package.lastUpdated">
+                                1 day ago
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-blue-700 mr-3" data-event="click:viewPackage">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-gray-600" data-event="click:editPackage">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50" data-mock="true">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-secondary bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-warehouse text-secondary"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900" data-bind="package.name">Industrial Warehouse Expansion</div>
+                                        <div class="text-sm text-gray-500" data-bind="package.address">2150 Industrial Pkwy, Tampa</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900" data-bind="package.county">Hillsborough</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800" data-bind="package.status">
+                                    <i class="fas fa-hourglass-half mr-1"></i>
+                                    Pending
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-file-alt mr-1"></i>
+                                    <span data-bind="package.documentCount">8</span> files
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="package.lastUpdated">
+                                3 days ago
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-blue-700 mr-3" data-event="click:viewPackage">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-gray-600" data-event="click:editPackage">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50" data-mock="true">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-error bg-opacity-10 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-home text-error"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900" data-bind="package.name">Beachfront Resort Renovation</div>
+                                        <div class="text-sm text-gray-500" data-bind="package.address">500 Gulf Shore Dr, Naples</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900" data-bind="package.county">Collier</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-error bg-opacity-10 text-error" data-bind="package.status">
+                                    <i class="fas fa-times-circle mr-1"></i>
+                                    Rejected
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-file-alt mr-1"></i>
+                                    <span data-bind="package.documentCount">15</span> files
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="package.lastUpdated">
+                                1 week ago
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-blue-700 mr-3" data-event="click:viewPackage">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-gray-600" data-event="click:editPackage">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- @END_MAP )) -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div class="text-sm text-gray-500">
+                    Showing 1 to 4 of 57 results
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50" disabled>
+                        Previous
+                    </button>
+                    <button class="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-blue-700">
+                        1
+                    </button>
+                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                        2
+                    </button>
+                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                        3
+                    </button>
+                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Permit Packages List -->
+
+        <!-- @COMPONENT: Quick Actions Panel [Floating action buttons for mobile] -->
+        <div class="fixed bottom-6 right-6 md:hidden">
+            <div class="flex flex-col space-y-3">
+                <button class="w-12 h-12 bg-primary hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center" data-event="click:createPackage">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="w-12 h-12 bg-surface hover:bg-gray-50 text-gray-600 rounded-full shadow-lg flex items-center justify-center border" data-event="click:uploadDocument">
+                    <i class="fas fa-upload"></i>
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Quick Actions Panel -->
+    </div>
+
+    <!-- @COMPONENT: New Package Modal [Create permit package form] -->
+    <div class="fixed inset-0 z-50 hidden" id="new-package-modal">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Create New Permit Package</h3>
+                    <button class="text-gray-400 hover:text-gray-600" data-event="click:closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form class="p-6 space-y-6" data-implementation="Form validation and submission logic">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="project-name" class="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                            <input type="text" id="project-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter project name" required />
+                        </div>
+                        
+                        <div>
+                            <label for="project-county" class="block text-sm font-medium text-gray-700 mb-2">County</label>
+                            <select id="project-county" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                <option value="">Select County</option>
+                                <option value="miami-dade">Miami-Dade County</option>
+                                <option value="broward">Broward County</option>
+                                <option value="palm-beach">Palm Beach County</option>
+                                <option value="orange">Orange County</option>
+                                <option value="hillsborough">Hillsborough County</option>
+                                <option value="pinellas">Pinellas County</option>
+                                <!-- Additional counties would be loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="project-address" class="block text-sm font-medium text-gray-700 mb-2">Project Address</label>
+                        <input type="text" id="project-address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter complete address" required />
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="project-type" class="block text-sm font-medium text-gray-700 mb-2">Project Type</label>
+                            <select id="project-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                <option value="">Select Type</option>
+                                <option value="residential-new">Residential - New Construction</option>
+                                <option value="residential-renovation">Residential - Renovation</option>
+                                <option value="commercial-new">Commercial - New Construction</option>
+                                <option value="commercial-renovation">Commercial - Renovation</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="multi-family">Multi-Family</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="construction-value" class="block text-sm font-medium text-gray-700 mb-2">Construction Value</label>
+                            <input type="number" id="construction-value" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="$0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="project-description" class="block text-sm font-medium text-gray-700 mb-2">Project Description</label>
+                        <textarea id="project-description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Describe the project scope and details..."></textarea>
+                    </div>
+
+                    <!-- @FUNCTIONALITY: File upload area should implement drag-and-drop with progress indicators -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Initial Documents</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-2">Drag and drop files here, or click to browse</p>
+                            <p class="text-sm text-gray-400">Supports: PDF, DWG, JPG, PNG (Max 10MB each)</p>
+                            <button type="button" class="mt-4 bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors" data-implementation="Use ObjectUploader component">
+                                Choose Files
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                        <button type="button" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-primary hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors" data-event="click:submitPackage">
+                            Create Package
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: New Package Modal -->
+
+    <script>
+    (function() {
+        // TODO: Implement real state management and API calls
+        
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const overlay = document.getElementById('mobile-menu-overlay');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Modal management
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModal() {
+            const modals = document.querySelectorAll('[id$="-modal"]');
+            modals.forEach(modal => {
+                modal.classList.add('hidden');
+            });
+            document.body.style.overflow = 'auto';
+        }
+
+        // Event delegation for dynamic elements
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-event]');
+            if (!target) return;
+
+            const event = target.getAttribute('data-event');
+            
+            switch(event) {
+                case 'click:toggleMobileMenu':
+                    toggleMobileMenu();
+                    break;
+                case 'click:createPackage':
+                    showModal('new-package-modal');
+                    break;
+                case 'click:closeModal':
+                    closeModal();
+                    break;
+                case 'click:applyFilters':
+                    // TODO: Implement filter application logic
+                    console.log('Apply filters logic here');
+                    break;
+                case 'click:viewPackage':
+                    // TODO: Navigate to package detail view
+                    console.log('View package logic here');
+                    break;
+                case 'click:editPackage':
+                    // TODO: Open package edit modal
+                    console.log('Edit package logic here');
+                    break;
+                case 'click:submitPackage':
+                    e.preventDefault();
+                    // TODO: Implement form validation and submission
+                    console.log('Submit package logic here');
+                    break;
+            }
+        });
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('.fixed.inset-0.bg-black')) {
+                closeModal();
+            }
+        });
+
+        // ESC key to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                const mobileMenu = document.getElementById('mobile-menu-overlay');
+                if (!mobileMenu.classList.contains('hidden')) {
+                    toggleMobileMenu();
+                }
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

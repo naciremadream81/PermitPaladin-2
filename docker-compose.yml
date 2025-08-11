@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: permitpaladin-postgres
+    environment:
+      POSTGRES_DB: permitpaladin
+      POSTGRES_USER: permitpaladin
+      POSTGRES_PASSWORD: permitpaladin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: permitpaladin-app
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://permitpaladin:permitpaladin123@postgres:5432/permitpaladin
+      SESSION_SECRET: your-super-secret-session-key-change-this
+      PORT: 3000
+      FILE_STORAGE_PATH: /app/uploads
+    volumes:
+      - ./uploads:/app/uploads
+      - ./migrations:/app/migrations
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

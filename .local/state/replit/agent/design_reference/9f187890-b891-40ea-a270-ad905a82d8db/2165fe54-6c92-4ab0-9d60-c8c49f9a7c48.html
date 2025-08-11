@@ -1,0 +1,553 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permit Package Manager - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    'roboto': ['Roboto', 'sans-serif']
+                },
+                colors: {
+                    primary: '#1976D2',
+                    secondary: '#388E3C',
+                    accent: '#FF9800',
+                    approved: '#4CAF50',
+                    rejected: '#F44336',
+                    pending: '#FF9800',
+                    draft: '#9E9E9E'
+                }
+            }
+        }
+    };
+    </script>
+</head>
+<body class="font-roboto bg-gray-50 min-h-screen">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <button class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100" data-event="click:toggleSidebar">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center ml-2 md:ml-0">
+                        <i class="fas fa-file-contract text-primary text-2xl mr-3"></i>
+                        <h1 class="text-xl font-semibold text-gray-900">Permit Package Manager</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2 text-sm text-gray-600">
+                        <div class="w-2 h-2 bg-approved rounded-full" data-implementation="Show online/offline status"></div>
+                        <span>Online</span>
+                    </div>
+                    <button class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md relative" data-event="click:showNotifications">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span class="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" data-bind="notifications.unread">3</span>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md" data-event="click:toggleUserMenu">
+                            <!-- Professional headshot of a construction manager -->
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&h=150" alt="User avatar" class="w-8 h-8 rounded-full object-cover">
+                            <span class="hidden md:block font-medium" data-bind="user.name">Mike Chen</span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <div class="flex h-screen">
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="hidden md:flex md:w-64 bg-white shadow-sm border-r border-gray-200 flex-col">
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-primary text-white" data-route="/dashboard">
+                    <i class="fas fa-tachometer-alt mr-3 text-base"></i>
+                    Dashboard
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/permits">
+                    <i class="fas fa-folder-open mr-3 text-base"></i>
+                    Permit Packages
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/checklists">
+                    <i class="fas fa-clipboard-list mr-3 text-base"></i>
+                    County Checklists
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/documents">
+                    <i class="fas fa-file-alt mr-3 text-base"></i>
+                    Documents
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/reports">
+                    <i class="fas fa-chart-bar mr-3 text-base"></i>
+                    Reports
+                </a>
+                <div class="border-t border-gray-200 my-4"></div>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/settings">
+                    <i class="fas fa-cog mr-3 text-base"></i>
+                    Settings
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100" data-route="/users">
+                    <i class="fas fa-users mr-3 text-base"></i>
+                    User Management
+                </a>
+            </nav>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Dashboard Header -->
+                <div class="mb-8">
+                    <div class="md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                                Dashboard
+                            </h2>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Welcome back, <span data-bind="user.name" data-mock="true">Mike</span>. Here's what's happening with your permits today.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4">
+                            <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" data-event="click:createPermit" data-implementation="Should open create permit modal">
+                                <i class="fas fa-plus mr-2"></i>
+                                New Permit Package
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                    <!-- @MAP: statsCards.map(card => ( -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-file-alt text-2xl text-gray-400"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate" data-mock="true">Total Packages</dt>
+                                        <dd class="text-lg font-medium text-gray-900" data-bind="stats.total" data-mock="true">24</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-clock text-2xl text-pending"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate" data-mock="true">Pending Review</dt>
+                                        <dd class="text-lg font-medium text-gray-900" data-bind="stats.pending" data-mock="true">8</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-2xl text-approved"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate" data-mock="true">Approved</dt>
+                                        <dd class="text-lg font-medium text-gray-900" data-bind="stats.approved" data-mock="true">12</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-2xl text-rejected"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate" data-mock="true">Needs Attention</dt>
+                                        <dd class="text-lg font-medium text-gray-900" data-bind="stats.rejected" data-mock="true">4</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP -->
+                </div>
+
+                <!-- Recent Activity and Quick Actions -->
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+                    <!-- Recent Permit Packages -->
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Permit Packages</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <!-- @MAP: recentPermits.map(permit => ( -->
+                            <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer" data-event="click:viewPermit" data-implementation="Should navigate to permit detail view">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-bind="permit.name" data-mock="true">
+                                            Residential Addition - 123 Oak St
+                                        </p>
+                                        <p class="text-sm text-gray-500" data-bind="permit.county" data-mock="true">
+                                            Santa Clara County • Updated 2 hours ago
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pending bg-opacity-10 text-pending" data-bind="permit.status" data-mock="true">
+                                            Pending
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer" data-event="click:viewPermit">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-mock="true">
+                                            Commercial Renovation - 456 Main St
+                                        </p>
+                                        <p class="text-sm text-gray-500" data-mock="true">
+                                            Alameda County • Updated 5 hours ago
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-approved bg-opacity-10 text-approved" data-mock="true">
+                                            Approved
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer" data-event="click:viewPermit">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-mock="true">
+                                            New Construction - 789 Pine Ave
+                                        </p>
+                                        <p class="text-sm text-gray-500" data-mock="true">
+                                            San Mateo County • Updated 1 day ago
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rejected bg-opacity-10 text-rejected" data-mock="true">
+                                            Revision Needed
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP -->
+                        </div>
+                        <div class="px-6 py-3 bg-gray-50 text-center">
+                            <a href="#" class="text-sm font-medium text-primary hover:text-blue-700" data-route="/permits">
+                                View all permit packages →
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <button class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors" data-event="click:createPermit">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-plus-circle text-primary text-xl"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-medium text-gray-900">Create New Permit Package</p>
+                                        <p class="text-sm text-gray-500">Start a new permit application</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </button>
+
+                            <button class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors" data-event="click:uploadDocuments" data-implementation="Should use ObjectUploader component">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-upload text-secondary text-xl"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-medium text-gray-900">Upload Documents</p>
+                                        <p class="text-sm text-gray-500">Add drawings, forms, or photos</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </button>
+
+                            <button class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors" data-event="click:manageChecklists">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-clipboard-check text-accent text-xl"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-medium text-gray-900">Manage Checklists</p>
+                                        <p class="text-sm text-gray-500">Update county requirements</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </button>
+
+                            <button class="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors" data-event="click:syncData" data-implementation="Should trigger offline sync">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-sync-alt text-gray-600 text-xl"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-medium text-gray-900">Sync Data</p>
+                                        <p class="text-sm text-gray-500">Update offline changes</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- County Checklist Overview -->
+                <div class="bg-white shadow rounded-lg mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">County Checklist Status</h3>
+                            <button class="text-sm font-medium text-primary hover:text-blue-700" data-event="click:manageChecklists">
+                                Manage All →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <!-- @MAP: countyChecklists.map(county => ( -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-medium text-gray-900" data-bind="county.name" data-mock="true">Santa Clara County</h4>
+                                    <span class="text-xs text-gray-500" data-bind="county.lastUpdated" data-mock="true">Updated 3 days ago</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600" data-mock="true">Active Checklists</span>
+                                        <span class="font-medium" data-bind="county.activeChecklists" data-mock="true">12</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 75%" data-bind-style="county.completionRate" data-mock="true"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span data-mock="true">75% Complete</span>
+                                        <span data-bind="county.pendingItems" data-mock="true">3 pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-medium text-gray-900" data-mock="true">Alameda County</h4>
+                                    <span class="text-xs text-gray-500" data-mock="true">Updated 1 week ago</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600" data-mock="true">Active Checklists</span>
+                                        <span class="font-medium" data-mock="true">8</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-secondary h-2 rounded-full" style="width: 90%" data-mock="true"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span data-mock="true">90% Complete</span>
+                                        <span data-mock="true">1 pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-medium text-gray-900" data-mock="true">San Mateo County</h4>
+                                    <span class="text-xs text-gray-500" data-mock="true">Updated 2 weeks ago</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600" data-mock="true">Active Checklists</span>
+                                        <span class="font-medium" data-mock="true">5</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-accent h-2 rounded-full" style="width: 60%" data-mock="true"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span data-mock="true">60% Complete</span>
+                                        <span data-mock="true">5 pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Documents -->
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Documents</h3>
+                            <button class="text-sm font-medium text-primary hover:text-blue-700" data-route="/documents">
+                                View All →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <!-- @MAP: recentDocuments.map(doc => ( -->
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-pdf text-red-500" data-implementation="Show icon based on file type"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate" data-bind="doc.name" data-mock="true">
+                                        Site Plan Drawing - Rev 3.pdf
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        <span data-bind="doc.size" data-mock="true">2.4 MB</span> • 
+                                        <span data-bind="doc.uploadedBy" data-mock="true">Uploaded by Sarah Johnson</span> • 
+                                        <span data-bind="doc.uploadDate" data-mock="true">2 hours ago</span>
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:previewDocument" data-implementation="Should open document preview">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:downloadDocument">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-image text-blue-500" data-mock="true"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate" data-mock="true">
+                                        Foundation Inspection Photo.jpg
+                                    </p>
+                                    <p class="text-sm text-gray-500" data-mock="true">
+                                        <span>1.8 MB</span> • 
+                                        <span>Uploaded by Mike Chen</span> • 
+                                        <span>4 hours ago</span>
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="p-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="p-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-alt text-green-500" data-mock="true"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate" data-mock="true">
+                                        Building Permit Application.docx
+                                    </p>
+                                    <p class="text-sm text-gray-500" data-mock="true">
+                                        <span>456 KB</span> • 
+                                        <span>Uploaded by Alex Rivera</span> • 
+                                        <span>1 day ago</span>
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="p-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="p-2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="fixed inset-0 flex z-40 md:hidden hidden" id="mobile-sidebar" data-implementation="Show/hide based on sidebar toggle state">
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-75" data-event="click:closeSidebar"></div>
+        <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+            <div class="absolute top-0 right-0 -mr-12 pt-2">
+                <button class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" data-event="click:closeSidebar">
+                    <i class="fas fa-times text-white text-xl"></i>
+                </button>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <!-- Same navigation items as desktop sidebar -->
+                <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-primary text-white">
+                    <i class="fas fa-tachometer-alt mr-3 text-base"></i>
+                    Dashboard
+                </a>
+                <!-- Additional mobile navigation items would go here -->
+            </nav>
+        </div>
+    </div>
+
+    <script>
+    // TODO: Implement business logic, API calls, and state management
+    (function() {
+        // Mobile sidebar toggle functionality
+        const toggleSidebarBtn = document.querySelector('[data-event="click:toggleSidebar"]');
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const closeSidebarBtns = document.querySelectorAll('[data-event="click:closeSidebar"]');
+        
+        if (toggleSidebarBtn && mobileSidebar) {
+            toggleSidebarBtn.addEventListener('click', function() {
+                mobileSidebar.classList.remove('hidden');
+            });
+        }
+        
+        closeSidebarBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (mobileSidebar) {
+                    mobileSidebar.classList.add('hidden');
+                }
+            });
+        });
+
+        // Placeholder for other interactive functionality
+        // Real implementation would include:
+        // - Data fetching and state management
+        // - Form handling for permit creation
+        // - File upload progress tracking
+        // - Real-time sync status updates
+        // - Notification system
+        // - Search and filtering
+        // - Document preview modal
+    })();
+    </script>
+</body>
+</html>

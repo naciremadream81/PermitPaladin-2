@@ -8,6 +8,8 @@ import {
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { insertPermitPackageSchema, insertPackageDocumentSchema } from "@shared/schema";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -55,6 +57,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const objectStorageService = new ObjectStorageService();
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
     res.json({ uploadURL });
+  });
+
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Test database connection
+      await db.execute(sql`SELECT 1`);
+      
+      res.json({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        database: "connected",
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        version: process.env.npm_package_version || "1.0.0"
+      });
+    } catch (error) {
+      res.status(503).json({
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : "Unknown error",
+        uptime: process.uptime()
+      });
+    }
   });
 
   // Counties
