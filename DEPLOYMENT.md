@@ -1,410 +1,382 @@
-# PermitPaladin - Home Server Deployment Guide
+# 🚀 PermitPaladin Production Deployment Guide
 
 ## Overview
-PermitPaladin is a comprehensive permit package management system designed for construction teams. This guide will help you deploy it on your home server (Raspberry Pi 4, Linux PC, or any Linux-based system).
 
-## System Requirements
+This guide will help you deploy PermitPaladin as a production-ready home server application. The system is designed to run on Linux-based home servers, including Raspberry Pi 4, with Docker for easy deployment and management.
+
+## 🏠 System Requirements
 
 ### Minimum Requirements
-- **CPU**: 2 cores (ARM64 for Pi 4, x64 for PC)
-- **RAM**: 4GB (8GB recommended)
-- **Storage**: 20GB available space
-- **OS**: Linux (Ubuntu 20.04+, Debian 11+, or Raspberry Pi OS)
+- **CPU**: 2 cores (ARM64 or x64)
+- **RAM**: 4GB
+- **Storage**: 20GB (SSD recommended)
+- **OS**: Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
 
-### Recommended for Production
+### Recommended Requirements
 - **CPU**: 4+ cores
 - **RAM**: 8GB+
 - **Storage**: 100GB+ SSD
 - **OS**: Ubuntu 22.04 LTS or Debian 12
 
-## Quick Start with Docker (Recommended)
+### Raspberry Pi Specific
+- **Model**: Raspberry Pi 4 (4GB+ RAM)
+- **Storage**: 64GB+ microSD or USB SSD
+- **Cooling**: Active cooling recommended for sustained performance
 
-### 1. Install Docker and Docker Compose
+## 🔧 Prerequisites
 
+### 1. Install Docker
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
 # Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
-# Add user to docker group
+# Add your user to docker group
 sudo usermod -aG docker $USER
 
+# Log out and back in, or run:
+newgrp docker
+```
+
+### 2. Install Docker Compose
+```bash
 # Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Log out and back in for group changes to take effect
-exit
-# SSH back in
+# Verify installation
+docker-compose --version
 ```
 
-### 2. Clone and Deploy
+### 3. System Updates
+```bash
+# Update system packages
+sudo apt update && sudo apt upgrade -y
 
+# Install additional utilities
+sudo apt install -y curl wget git htop tree
+```
+
+## 🚀 Quick Deployment
+
+### Option 1: Automated Setup (Recommended)
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd PermitPaladin-2
+git clone https://github.com/yourusername/PermitPaladin.git
+cd PermitPaladin
 
-# Create uploads directory
-mkdir uploads
+# Make startup script executable
+chmod +x start.sh
 
-# Build and start services
-docker-compose up -d
-
-# Check status
-docker-compose ps
-docker-compose logs -f
+# Run the automated setup
+./start.sh
 ```
 
-### 3. Access the Application
-
-- **Web Interface**: http://your-server-ip:3000
-- **Database**: localhost:5432 (if accessing from host)
-
-## Manual Installation (Advanced)
-
-### 1. Install PostgreSQL
-
+### Option 2: Manual Setup
 ```bash
-# Install PostgreSQL
-sudo apt install postgresql postgresql-contrib -y
-
-# Start and enable service
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-
-# Create database and user
-sudo -u postgres psql -c "CREATE DATABASE permitpaladin;"
-sudo -u postgres psql -c "CREATE USER permitpaladin WITH PASSWORD 'permitpaladin123';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE permitpaladin TO permitpaladin;"
-```
-
-### 2. Install Node.js
-
-```bash
-# Install Node.js 18.x
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install nodejs -y
-
-# Verify installation
-node --version
-npm --version
-```
-
-### 3. Setup Application
-
-```bash
-# Install dependencies
-npm install
+# Clone and setup
+git clone https://github.com/yourusername/PermitPaladin.git
+cd PermitPaladin
 
 # Create environment file
-cp .env.example .env
+cp env.template .env
+# Edit .env with your settings
 
-# Edit environment variables
-nano .env
+# Create directories
+mkdir -p uploads logs backups ssl
+
+# Start services
+docker-compose up -d
 ```
 
-### 4. Environment Configuration
+## 🔒 Security Configuration
+
+### 1. Environment Variables
+Edit `.env` file and update these critical settings:
 
 ```bash
-# .env file contents
-NODE_ENV=production
-PORT=3000
-SESSION_SECRET=your-super-secret-session-key-change-this
+# Generate a secure session secret
+SESSION_SECRET=$(openssl rand -hex 32)
 
-# Database (local)
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=permitpaladin
-DB_USER=permitpaladin
-DB_PASSWORD=permitpaladin123
-
-# File Storage
-FILE_STORAGE_PATH=./uploads
+# Update .env file
+sed -i "s/SESSION_SECRET=.*/SESSION_SECRET=$SESSION_SECRET/" .env
 ```
 
-### 5. Database Setup
-
+### 2. Firewall Configuration
 ```bash
-# Generate migrations
-npm run db:generate
+# Install UFW firewall
+sudo apt install ufw
 
-# Apply migrations
-npm run db:migrate
+# Configure firewall rules
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 3000/tcp  # PermitPaladin web interface
+sudo ufw allow 80/tcp     # HTTP (if using nginx)
+sudo ufw allow 443/tcp    # HTTPS (if using nginx)
 
-# Initialize sample data
-psql -h localhost -U permitpaladin -d permitpaladin -f init-db.sql
+# Enable firewall
+sudo ufw enable
 ```
 
-### 6. Build and Start
+### 3. SSL/HTTPS Setup (Optional but Recommended)
 
-```bash
-# Build application
-npm run build
-
-# Start production server
-npm start
-```
-
-## Production Deployment
-
-### 1. Reverse Proxy with Nginx
-
-```bash
-# Install Nginx
-sudo apt install nginx -y
-
-# Create site configuration
-sudo nano /etc/nginx/sites-available/permitpaladin
-```
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-# Enable site
-sudo ln -s /etc/nginx/sites-available/permitpaladin /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-### 2. SSL with Let's Encrypt
-
+#### Using Let's Encrypt with Certbot
 ```bash
 # Install Certbot
-sudo apt install certbot python3-certbot-nginx -y
+sudo apt install certbot
 
-# Obtain SSL certificate
-sudo certbot --nginx -d your-domain.com
+# Get SSL certificate
+sudo certbot certonly --standalone -d yourdomain.com
 
-# Auto-renewal
-sudo crontab -e
-# Add: 0 12 * * * /usr/bin/certbot renew --quiet
+# Copy certificates to ssl directory
+sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/cert.pem
+sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/key.pem
+
+# Set proper permissions
+sudo chown $USER:$USER ssl/*
+chmod 600 ssl/*
 ```
 
-### 3. Systemd Service
+#### Update nginx.conf for HTTPS
+Uncomment and configure the HTTPS server block in `nginx.conf`.
 
+### 4. Database Security
 ```bash
-# Create service file
-sudo nano /etc/systemd/system/permitpaladin.service
+# Change default database password
+# Edit .env file and update DB_PASSWORD
+# Then restart services
+docker-compose down
+docker-compose up -d
 ```
 
-```ini
-[Unit]
-Description=PermitPaladin Application
-After=network.target postgresql.service
+## 📊 Monitoring & Maintenance
 
-[Service]
-Type=simple
-User=permitpaladin
-WorkingDirectory=/path/to/your/app
-Environment=NODE_ENV=production
-ExecStart=/usr/bin/node dist/index.js
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
+### 1. Health Checks
 ```bash
-# Enable and start service
-sudo systemctl daemon-reload
-sudo systemctl enable permitpaladin
-sudo systemctl start permitpaladin
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Test health endpoint
+curl http://localhost:3000/api/health
 ```
 
-## Security Considerations
-
-### 1. Firewall Configuration
-
+### 2. Backup Procedures
 ```bash
-# Configure UFW firewall
-sudo ufw enable
-sudo ufw allow ssh
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 3000  # Only if not using reverse proxy
+# Manual backup
+./backup.sh
+
+# Setup automated backups (cron)
+crontab -e
+
+# Add this line for daily backups at 2 AM:
+0 2 * * * /path/to/PermitPaladin/backup.sh
 ```
 
-### 2. Database Security
-
+### 3. Cleanup Procedures
 ```bash
-# Change default passwords
-sudo -u postgres psql -c "ALTER USER permitpaladin PASSWORD 'strong-password-here';"
+# Clean up old files (default: 90 days)
+./cleanup.sh
 
-# Restrict database access
-sudo nano /etc/postgresql/*/main/postgresql.conf
-# Set: listen_addresses = 'localhost'
-sudo systemctl reload postgresql
+# Clean up old files (custom days)
+./cleanup.sh 30
 ```
 
-### 3. Application Security
-
+### 4. System Monitoring
 ```bash
-# Update session secret
-# Use a strong, random string in your .env file
-
-# Regular updates
-sudo apt update && sudo apt upgrade -y
-npm audit fix
-```
-
-## Monitoring and Maintenance
-
-### 1. Log Management
-
-```bash
-# View application logs
-docker-compose logs -f app
-
-# View database logs
-sudo tail -f /var/log/postgresql/postgresql-*.log
-
-# System logs
-sudo journalctl -u permitpaladin -f
-```
-
-### 2. Backup Strategy
-
-```bash
-# Database backup
-pg_dump -h localhost -U permitpaladin permitpaladin > backup_$(date +%Y%m%d).sql
-
-# File backup
-tar -czf uploads_backup_$(date +%Y%m%d).tar.gz uploads/
-
-# Automated backup script
-nano backup.sh
-```
-
-```bash
-#!/bin/bash
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backups/permitpaladin"
-
-mkdir -p $BACKUP_DIR
-
-# Database backup
-pg_dump -h localhost -U permitpaladin permitpaladin > $BACKUP_DIR/db_$DATE.sql
-
-# File backup
-tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz uploads/
-
-# Keep only last 7 days
-find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
-find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
-```
-
-### 3. Performance Monitoring
-
-```bash
-# Install monitoring tools
-sudo apt install htop iotop nethogs -y
-
 # Monitor system resources
 htop
-iotop
-nethogs
+
+# Monitor disk usage
+df -h
+
+# Monitor Docker resources
+docker stats
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Port already in use**
-   ```bash
-   sudo netstat -tulpn | grep :3000
-   sudo kill -9 <PID>
-   ```
-
-2. **Database connection failed**
-   ```bash
-   sudo systemctl status postgresql
-   sudo -u postgres psql -c "SELECT version();"
-   ```
-
-3. **Permission denied on uploads**
-   ```bash
-   sudo chown -R $USER:$USER uploads/
-   chmod 755 uploads/
-   ```
-
-4. **Memory issues on Raspberry Pi**
-   ```bash
-   # Add swap file
-   sudo fallocate -l 2G /swapfile
-   sudo chmod 600 /swapfile
-   sudo mkswap /swapfile
-   sudo swapon /swapfile
-   ```
-
-### Getting Help
-
-- Check logs: `docker-compose logs -f` or `sudo journalctl -u permitpaladin -f`
-- Verify database: `npm run db:push`
-- Test connection: `curl http://localhost:3000/api/health`
-
-## Updates and Upgrades
+## 🔄 Updates & Maintenance
 
 ### 1. Application Updates
-
 ```bash
 # Pull latest changes
 git pull origin main
 
-# Rebuild and restart
+# Rebuild and restart services
 docker-compose down
 docker-compose build --no-cache
 docker-compose up -d
 ```
 
 ### 2. Database Migrations
-
 ```bash
-# Generate new migrations
-npm run db:generate
-
-# Apply migrations
-npm run db:migrate
+# Apply database migrations
+docker-compose exec app npm run db:migrate
 ```
 
 ### 3. System Updates
-
 ```bash
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
-# Update Docker images
-docker-compose pull
-docker-compose up -d
+# Restart Docker services
+sudo systemctl restart docker
+docker-compose restart
 ```
 
-## Support and Resources
+## 🚨 Troubleshooting
 
-- **Documentation**: Check the README.md file
-- **Issues**: Report bugs and feature requests
-- **Community**: Join our discussion forum
+### Common Issues
+
+#### 1. Port Already in Use
+```bash
+# Check what's using port 3000
+sudo netstat -tlnp | grep :3000
+
+# Kill the process or change port in .env
+```
+
+#### 2. Database Connection Issues
+```bash
+# Check database container
+docker-compose logs postgres
+
+# Restart database
+docker-compose restart postgres
+```
+
+#### 3. Permission Issues
+```bash
+# Fix uploads directory permissions
+sudo chown -R $USER:$USER uploads/
+chmod -R 755 uploads/
+```
+
+#### 4. Memory Issues (Raspberry Pi)
+```bash
+# Increase swap space
+sudo dphys-swapfile swapoff
+sudo nano /etc/dphys-swapfile
+# Set CONF_SWAPSIZE=2048
+sudo dphys-swapfile setup
+sudo dphys-swapfile swapon
+```
+
+### Log Analysis
+```bash
+# View application logs
+docker-compose logs -f app
+
+# View database logs
+docker-compose logs -f postgres
+
+# View nginx logs (if using)
+docker-compose logs -f nginx
+```
+
+## 📈 Performance Optimization
+
+### 1. Database Optimization
+```bash
+# Edit postgres configuration in docker-compose.yml
+# Adjust memory limits based on your system
+```
+
+### 2. File Storage Optimization
+```bash
+# Use SSD storage when possible
+# Regular cleanup of old files
+# Monitor uploads directory size
+```
+
+### 3. Caching (Optional)
+```bash
+# Redis is included in docker-compose.yml
+# Enable Redis caching in your application
+```
+
+## 🔐 Advanced Security
+
+### 1. Reverse Proxy with Nginx
+The included `nginx.conf` provides:
+- Rate limiting
+- Security headers
+- Gzip compression
+- SSL termination
+
+### 2. VPN Access (Recommended)
+```bash
+# Install WireGuard
+sudo apt install wireguard
+
+# Configure VPN for secure remote access
+# This allows you to access your server from anywhere securely
+```
+
+### 3. Intrusion Detection
+```bash
+# Install fail2ban
+sudo apt install fail2ban
+
+# Configure for SSH and web application protection
+```
+
+## 📱 Remote Access
+
+### 1. Port Forwarding
+Configure your router to forward port 3000 (or 80/443 if using nginx) to your server.
+
+### 2. Dynamic DNS
+Use a dynamic DNS service if your home IP changes frequently.
+
+### 3. VPN Access
+Set up a VPN for secure remote access to your home network.
+
+## 🎯 Production Checklist
+
+- [ ] Docker and Docker Compose installed
+- [ ] Environment variables configured
+- [ ] Firewall configured
+- [ ] SSL certificates installed (optional)
+- [ ] Backup procedures tested
+- [ ] Monitoring configured
+- [ ] Security updates enabled
+- [ ] Performance optimized
+- [ ] Documentation updated
+- [ ] Team trained on maintenance
+
+## 📞 Support
+
+For issues and questions:
+1. Check the troubleshooting section above
+2. Review application logs
+3. Check system resources
+4. Consult the main README.md
+5. Open an issue on GitHub
+
+## 🔄 Maintenance Schedule
+
+### Daily
+- Check service status
+- Review error logs
+
+### Weekly
+- Run cleanup script
+- Check disk usage
+- Review backup logs
+
+### Monthly
+- Update system packages
+- Review security settings
+- Test backup restoration
+
+### Quarterly
+- Review performance metrics
+- Update application
+- Security audit
 
 ---
 
-**Note**: This deployment guide assumes basic Linux knowledge. For production use, consider consulting with a system administrator or DevOps professional.
+**🚀 Your PermitPaladin production server is now ready for professional use!**

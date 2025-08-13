@@ -1,5 +1,5 @@
 {
-  "name": "rest-express",
+  "name": "permitpaladin",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,21 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "setup:local": "npm run db:generate && npm run db:migrate"
+    "docker:restart": "docker-compose restart",
+    "docker:cleanup": "docker system prune -f",
+    "setup:local": "npm run db:generate && npm run db:migrate",
+    "setup:production": "npm run build && npm run docker:build && npm run docker:up",
+    "deploy": "git pull && npm run setup:production",
+    "backup": "./backup.sh",
+    "cleanup": "./cleanup.sh",
+    "health": "curl -f http://localhost:3000/api/health || echo 'Health check failed'",
+    "logs": "docker-compose logs -f",
+    "status": "docker-compose ps",
+    "monitor": "docker stats",
+    "update": "npm run deploy",
+    "maintenance": "npm run backup && npm run cleanup",
+    "security:check": "npm audit && docker-compose exec app npm audit",
+    "performance:test": "ab -n 1000 -c 10 http://localhost:3000/api/health"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
