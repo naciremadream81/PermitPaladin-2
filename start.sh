@@ -158,55 +158,95 @@ fi
 
 # Check system resources
 print_status "Checking system resources..."
-TOTAL_MEM=$(free -m | awk 'NR==2{printf "%.0f", $2}')
-TOTAL_DISK=$(df -BG . | awk 'NR==2{printf "%.0f", $4}')
 
-if [ "$TOTAL_MEM" -lt 2048 ]; then
-    print_warning "System has less than 2GB RAM (${TOTAL_MEM}MB). Performance may be limited."
-fi
-
-if [ "$TOTAL_DISK" -lt 20 ]; then
-    print_warning "Less than 20GB disk space available (${TOTAL_DISK}GB). Consider freeing up space."
+# macOS vs Linux system resource checking
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    TOTAL_MEM=$(sysctl -n hw.memsize | awk '{printf "%.0f", $1/1024/1024}')
+    TOTAL_DISK=$(df -g . | awk 'NR==2{printf "%.0f", $4}')
+    
+    if [ "$TOTAL_MEM" -lt 2048 ]; then
+        print_warning "System has less than 2GB RAM (${TOTAL_MEM}MB). Performance may be limited."
+    fi
+    
+    if [ "$TOTAL_DISK" -lt 20 ]; then
+        print_warning "Less than 20GB disk space available (${TOTAL_DISK}GB). Consider freeing up space."
+    fi
+else
+    # Linux
+    TOTAL_MEM=$(free -m | awk 'NR==2{printf "%.0f", $2}')
+    TOTAL_DISK=$(df -BG . | awk 'NR==2{printf "%.0f", $4}')
+    
+    if [ "$TOTAL_MEM" -lt 2048 ]; then
+        print_warning "System has less than 2GB RAM (${TOTAL_MEM}MB). Performance may be limited."
+    fi
+    
+    if [ "$TOTAL_DISK" -lt 20 ]; then
+        print_warning "Less than 20GB disk space available (${TOTAL_DISK}GB). Consider freeing up space."
+    fi
 fi
 
 # Stop any existing containers
 print_status "Stopping any existing containers..."
 docker-compose down --remove-orphans 2>/dev/null || true
 
+# Check if we should use simple or full docker-compose
+if [ -f "docker-compose.simple.yml" ]; then
+    print_status "Using simplified docker-compose configuration for initial setup..."
+    COMPOSE_FILE="docker-compose.simple.yml"
+else
+    print_status "Using full docker-compose configuration..."
+    COMPOSE_FILE="docker-compose.yml"
+fi
+
 # Build and start services
 print_status "Building and starting PermitPaladin services..."
-docker-compose build --no-cache
+print_status "Using compose file: $COMPOSE_FILE"
+
+# Build the application first
+print_status "Building Docker image..."
+docker-compose -f "$COMPOSE_FILE" build --no-cache
 
 # Start services
 print_status "Starting services..."
-docker-compose up -d
+docker-compose -f "$COMPOSE_FILE" up -d
 
 # Wait for services to be ready
 print_status "Waiting for services to be ready..."
-sleep 15
+sleep 20
 
 # Check service status
 print_status "Checking service status..."
-docker-compose ps
+docker-compose -f "$COMPOSE_FILE" ps
 
 # Test database connection
 print_status "Testing database connection..."
-if docker-compose exec -T app node -e "
-const { testConnection } = require('./dist/db.js');
-testConnection().then(() => console.log('Database connection successful')).catch(console.error);
-" 2>/dev/null; then
+sleep 10
+
+if docker-compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U permitpaladin -d permitpaladin >/dev/null 2>&1; then
     print_success "Database connection successful"
 else
     print_warning "Database connection test failed (this is normal during first startup)"
+    print_status "Waiting a bit longer for database to initialize..."
+    sleep 20
+    
+    if docker-compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U permitpaladin -d permitpaladin >/dev/null 2>&1; then
+        print_success "Database connection successful after waiting"
+    else
+        print_warning "Database still not ready, but continuing..."
+    fi
 fi
 
 # Test application health
 print_status "Testing application health..."
-sleep 10
+sleep 15
+
 if curl -f http://localhost:3000/api/health >/dev/null 2>&1; then
     print_success "Application health check passed"
 else
     print_warning "Application health check failed (may still be starting up)"
+    print_status "Checking application logs for issues..."
+    docker-compose -f "$COMPOSE_FILE" logs app --tail=20
 fi
 
 # Setup backup cron job
@@ -262,7 +302,14 @@ EOF
 fi
 
 # Get server IP
-SERVER_IP=$(hostname -I | awk '{print $1}' | head -1)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    SERVER_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1)
+else
+    # Linux
+    SERVER_IP=$(hostname -I | awk '{print $1}' | head -1)
+fi
+
 if [ -z "$SERVER_IP" ]; then
     SERVER_IP="localhost"
 fi
@@ -273,9 +320,9 @@ echo "========================================================"
 echo "🌐 Web Interface: http://${SERVER_IP}:3000"
 echo "🔒 Admin Interface: http://${SERVER_IP}:3000/admin"
 echo "📊 Health Check: http://${SERVER_IP}:3000/api/health"
-echo "📋 Status: docker-compose ps"
-echo "📋 Logs: docker-compose logs -f"
-echo "🛑 Stop: docker-compose down"
+echo "📋 Status: docker-compose -f $COMPOSE_FILE ps"
+echo "📋 Logs: docker-compose -f $COMPOSE_FILE logs -f"
+echo "🛑 Stop: docker-compose -f $COMPOSE_FILE down"
 echo ""
 echo "📁 Directories created:"
 echo "   - uploads/: File storage"
@@ -286,10 +333,10 @@ echo ""
 echo "🔄 Maintenance commands:"
 echo "   - Backup: ./backup.sh"
 echo "   - Cleanup: ./cleanup.sh [days]"
-echo "   - Update: git pull && docker-compose build --no-cache && docker-compose up -d"
+echo "   - Update: git pull && docker-compose -f $COMPOSE_FILE build --no-cache && docker-compose -f $COMPOSE_FILE up -d"
 echo ""
 echo "⏰ Please wait 2-3 minutes for the application to fully start up."
-echo "   You can monitor progress with: docker-compose logs -f"
+echo "   You can monitor progress with: docker-compose -f $COMPOSE_FILE logs -f"
 echo ""
 echo "📚 For more information, see DEPLOYMENT.md"
 echo "🔒 Security: Consider setting up HTTPS with SSL certificates"
@@ -303,4 +350,13 @@ if command -v vcgencmd &> /dev/null; then
     echo "   - Ensure adequate cooling"
     echo "   - Use a fast microSD card or USB SSD"
     echo "   - Consider using a 4GB+ model for better performance"
+fi
+
+# Final status check
+echo ""
+print_status "Final status check..."
+if docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+    print_success "Services are running successfully!"
+else
+    print_warning "Some services may not be running. Check with: docker-compose -f $COMPOSE_FILE ps"
 fi

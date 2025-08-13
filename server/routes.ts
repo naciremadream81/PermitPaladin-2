@@ -7,7 +7,7 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertPermitPackageSchema, insertPackageDocumentSchema } from "@shared/schema";
+import { insertPermitPackageSchema, insertPackageDocumentSchema } from "../shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 

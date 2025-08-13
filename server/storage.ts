@@ -17,7 +17,7 @@ import {
   type InsertChecklistItem,
   type InsertPackageChecklistProgress,
   type PackageChecklistProgress,
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, like, or, count } from "drizzle-orm";
 
